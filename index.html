@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prize Quiz</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html { height: 100%; font-family: Arial, sans-serif; }
+    /* Backgrounds */
+    body {
+      background: url('image1.png') no-repeat center center fixed;
+      background-size: cover;
+    }
+    @media(max-width: 767px) {
+      body {
+        background: url('image2.png') no-repeat center center fixed;
+        background-size: cover;
+      }
+    }
+    /* Overlay panels */
+    .overlay { position: fixed; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+    .panel { background: rgba(255,255,255,0.85); padding:20px; border-radius:8px; max-width: 90%; width: 400px; }
+    h1 { margin-bottom: 16px; color: #3F51B5; text-align: center; }
+    .input-group { margin-bottom: 12px; }
+    .input-group label { display:block; margin-bottom:4px; color:#333; }
+    .input-group input { width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; }
+    button { display:block; width:100%; padding:10px; background:#FF4081; color:#fff; border:none; border-radius:4px; font-size:16px; cursor:pointer; }
+    button:disabled { background:#ccc; cursor: not-allowed; }
+    .error { color: #D32F2F; font-size:14px; margin-top:8px; text-align:center; }
+    /* Quiz */
+    .question { margin-bottom: 16px; color: #3F51B5; }
+    .answers { list-style:none; margin-bottom:16px; }
+    .answers li { margin-bottom:8px; }
+    .answers input { margin-right:8px; }
+    /* Reward */
+    .rewards { display:flex; flex-direction:column; gap:10px; }
+    .reward-btn { background:#3F51B5; }
+    /* Form overlay */
+    .form-overlay { background: rgba(0,0,0,0.5); }
+    .gift-form { width: 350px; }
+    .success { text-align:center; }
+    .success svg { width:50px; height:50px; margin-bottom:12px; }
+  </style>
+</head>
+<body>
+  <!-- Promo Code Entry -->
+  <div class="overlay" id="promo-screen">
+    <div class="panel">
+      <h1>Enter Promo Code</h1>
+      <div class="input-group">
+        <label for="promo-input">Promo Code</label>
+        <input type="text" id="promo-input" placeholder="Enter promo code" autocomplete="off" />
+      </div>
+      <button id="promo-submit">Submit</button>
+      <div class="error" id="promo-error"></div>
+    </div>
+  </div>
+
+  <!-- Quiz Screen -->
+  <div class="overlay" id="quiz-screen" style="display:none;">
+    <div class="panel">
+      <h1>Quiz Prize</h1>
+      <div id="quiz-content"></div>
+      <button id="quiz-next">Next</button>
+      <div class="error" id="quiz-error"></div>
+    </div>
+  </div>
+
+  <!-- Reward Selection -->
+  <div class="overlay" id="reward-screen" style="display:none;">
+    <div class="panel">
+      <h1>Choose Your Gift</h1>
+      <div class="rewards">
+        <button class="reward-btn" data-gift="AppStore">Apple App Store $5</button>
+        <button class="reward-btn" data-gift="GooglePlay">Google Play $5</button>
+        <button class="reward-btn" data-gift="PlayStation">PlayStation Store $5</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gift Form -->
+  <div class="overlay form-overlay" id="form-screen" style="display:none;">
+    <div class="panel gift-form">
+      <h1>Enter Details</h1>
+      <div class="input-group"><label>Name</label><input type="text" id="gift-name" /></div>
+      <div class="input-group"><label>Email</label><input type="email" id="gift-email" /></div>
+      <div class="input-group"><label>Phone</label><input type="tel" id="gift-phone" /></div>
+      <button id="gift-submit">Send</button>
+      <div class="error" id="gift-error"></div>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div class="overlay" id="success-screen" style="display:none;">
+    <div class="panel success">
+      <svg viewBox="0 0 24 24" fill="#4CAF50"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      <p>Your gift will be emailed to you within 3 days.</p>
+    </div>
+  </div>
+
+  <script>
+    const validCodes = ['SPINGO','300USD'];
+    const promoScreen = document.getElementById('promo-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const rewardScreen = document.getElementById('reward-screen');
+    const formScreen = document.getElementById('form-screen');
+    const successScreen = document.getElementById('success-screen');
+
+    // Questions setup
+    const quizData = [
+      { q: 'How do you feel about quizzes?', a: ['Good','Bad','Indifferent'] },
+      { q: 'Would you take a quiz with personal questions?', a: ['Yes','No','Not sure'] },
+      { q: 'How do you feel about family-related questions?', a: ['Good','Bad','Indifferent'] },
+      { q: 'Would you join a timed quiz?', a: ['Yes','No','Not sure'] },
+      { q: 'How do you feel about trivia challenges?', a: ['Good','Bad','Indifferent'] },
+      { q: 'Would you answer questions about your hobbies?', a: ['Yes','No','Not sure'] },
+      { q: 'How do you feel about multiple choice quizzes?', a: ['Good','Bad','Indifferent'] },
+      { q: 'Would you participate in a quiz about pop culture?', a: ['Yes','No','Not sure'] },
+      { q: 'How do you feel about knowledge tests?', a: ['Good','Bad','Indifferent'] },
+      { q: 'Would you share personal memories in a quiz?', a: ['Yes','No','Not sure'] },
+      { q: 'How do you feel about interactive quizzes?', a: ['Good','Bad','Indifferent'] },
+      { q: 'Would you try a quiz on your favourite movies?', a: ['Yes','No','Not sure'] },
+      { q: 'How do you feel about timed challenges?', a: ['Good','Bad','Indifferent'] },
+      { q: 'Would you play a quiz with friends online?', a: ['Yes','No','Not sure'] },
+      { q: 'How do you feel about quizzes that give rewards?', a: ['Good','Bad','Indifferent'] }
+    ];
+    let current = 0;
+    const quizContent = document.getElementById('quiz-content');
+    const quizError = document.getElementById('quiz-error');
+
+    function renderQuestion() {
+      quizError.textContent = '';
+      const item = quizData[current];
+      quizContent.innerHTML = `
+        <div class="question">${item.q}</div>
+        <ul class="answers">
+          ${item.a.map(opt=>
+            `<li><label><input type='radio' name='answer' value='${opt}' /> ${opt}</label></li>`
+          ).join('')}
+        </ul>
+      `;
+    }
+
+    document.getElementById('promo-submit').addEventListener('click', () => {
+      const input = document.getElementById('promo-input');
+      const error = document.getElementById('promo-error');
+      error.textContent = '';
+      const code = input.value.trim().toUpperCase();
+      if (!validCodes.includes(code)) {
+        error.textContent = 'Invalid promo code.';
+      } else {
+        promoScreen.style.display = 'none';
+        quizScreen.style.display = 'flex';
+        renderQuestion();
+      }
+    });
+
+    document.getElementById('quiz-next').addEventListener('click', () => {
+      const sel = document.querySelector('input[name=answer]:checked');
+      if (!sel) { quizError.textContent='Please select an answer.'; return; }
+      current++;
+      if (current < quizData.length) {
+        renderQuestion();
+      } else {
+        quizScreen.style.display='none';
+        rewardScreen.style.display='flex';
+      }
+    });
+
+    document.querySelectorAll('.reward-btn').forEach(btn => btn.addEventListener('click', () => {
+      sessionStorage.setItem('chosenGift', btn.dataset.gift);
+      rewardScreen.style.display='none';
+      formScreen.style.display='flex';
+    }));
+
+    document.getElementById('gift-submit').addEventListener('click', () => {
+      const name = document.getElementById('gift-name').value.trim();
+      const email = document.getElementById('gift-email').value.trim();
+      const phone = document.getElementById('gift-phone').value.trim();
+      const error = document.getElementById('gift-error');
+      error.textContent = '';
+      if (!name || !email || !phone) {
+        error.textContent = 'Please fill all fields.';
+      } else {
+        formScreen.style.display='none';
+        successScreen.style.display='flex';
+      }
+    });
+  </script>
+</body>
+</html>
