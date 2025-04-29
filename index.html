@@ -18,9 +18,22 @@
         background-size: cover;
       }
     }
+    /* Title Text */
+    .title-text {
+      position: fixed;
+      top: 20px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #FFD700; /* Gold color */
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+      z-index: 1000;
+    }
     /* Overlay panels */
     .overlay { position: fixed; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
-    .panel { background: rgba(255,255,255,0.85); padding:20px; border-radius:8px; max-width: 90%; width: 400px; }
+    .panel { position: relative; background: rgba(255,255,255,0.85); padding:20px; border-radius:8px; max-width: 90%; width: 400px; z-index: 500; }
     h1 { margin-bottom: 16px; color: #3F51B5; text-align: center; }
     .input-group { margin-bottom: 12px; }
     .input-group label { display:block; margin-bottom:4px; color:#333; }
@@ -44,10 +57,13 @@
   </style>
 </head>
 <body>
+  <!-- Title Text on Background -->
+  <div class="title-text">PARTICIPATE IN THE QUIZ! ENTER YOUR PROMO CODE, ANSWER 15 QUESTIONS, AND CLAIM YOUR PRIZE.</div>
+
   <!-- Promo Code Entry -->
   <div class="overlay" id="promo-screen">
     <div class="panel">
-      <h1>ENTER YOUR PROMO CODE, ANSWER 15 QUESTIONS, AND CLAIM YOUR PRIZE.</h1>
+      <h1>Enter Promo Code</h1>
       <div class="input-group">
         <label for="promo-input">Promo Code</label>
         <input type="text" id="promo-input" placeholder="Enter promo code" autocomplete="off" />
